@@ -46,9 +46,22 @@ app.get("/urls/:shortURL", (req, res) => {
 
 app.post("/urls", (req, res) => {
   console.log(req.body);  // Log the POST request body to the console
-  res.send("Ok");         // Respond with 'Ok' (we will replace this)
+  let shortURL = generateRandomString();
+  urlDatabase[shortURL] = "http://" + req.body.longURL; 
+  res.render( "urls_show", {shortURL: shortURL, longURL: req.body.longURL});         // Respond with 'Ok' (we will replace this)
+});
+
+app.get("/u/:shortURL", (req, res) => {
+  const longURL = urlDatabase[req.params.shortURL];
+  console.log(longURL);
+  res.redirect(longURL);
 });
 
 function generateRandomString() {
-
+  const chart = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  let result = '';
+  for (i = 0; i < 6; i++) {
+    result = result + chart[Math.floor(Math.random() * (chart.length - 1))];
+  }
+  return result;
 }
