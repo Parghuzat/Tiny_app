@@ -57,6 +57,12 @@ app.get("/u/:shortURL", (req, res) => {
   res.redirect(longURL);
 });
 
+// POST to remove URL
+app.post("/urls/:shortURL/delete", (req, res) => {
+  delete urlDatabase[req.params.shortURL];
+  res.redirect("/urls");
+});
+
 function generateRandomString() {
   const chart = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
   let result = '';
