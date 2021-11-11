@@ -50,6 +50,9 @@ app.get("/urls/new", (req, res) => {
 });
 
 app.get("/urls/:shortURL", (req, res) => {
+  if (req.cookies["user_id"] === undefined) {
+    res.redirect("/login");
+  }
   if (urlDatabase[req.params.shortURL] === undefined) {
     return res.status(404).send('Page not Found');
   }
@@ -73,9 +76,13 @@ app.get("/u/:shortURL", (req, res) => {
     return res.status(404).send('Page not Found');
   }
   const longURL = urlDatabase[req.params.shortURL].longURL;
-  console.log(longURL);
   res.redirect(longURL);
 });
+
+app.post("/urls/:id", (req, res) => {
+  urlDatabase[req.params.id].longURL = req.body.longURL;
+  res.redirect("/urls");
+})
 
 // POST to remove URL
 app.post("/urls/:shortURL/delete", (req, res) => {
