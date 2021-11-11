@@ -73,7 +73,28 @@ app.post("/urls/:shortURL/delete", (req, res) => {
 });
 
 app.post("/login", (req, res) => {
-  res.cookie('username', req.body.username);
+  if (req.body.email === '' || req.body.password === '') {
+    return res.status(400).send('Invalied email or password!');
+  }
+  const userId = isEmailExsist(req.body.email);
+  if(userId == false) {
+    return res.status(400).send('Email doesn\'t exsist!');
+  }
+  if (users[userId]["password"] === req.body.password) {
+    res.cookie('user_id', userId);
+    res.redirect('/urls');
+  }
+  else {
+    return res.status(400).send('Invalied email or password!');
+  }  
+});
+
+app.get("/login", (req, res) => {
+  res.render("login");
+})
+
+app.post("/logout", (req, res) => {
+  res.clearCookie("user_id");
   res.redirect('/urls');
 });
 
@@ -98,6 +119,7 @@ app.post("/register", (req, res) => {
 app.get("/register", (req, res) => {
   res.render("registration")
 });
+
 function generateRandomString() {
   const chart = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
   let result = '';
@@ -110,7 +132,16 @@ function generateRandomString() {
 function isEmailExsist (email) {
   for (let user in users) {
     if (users[user]["email"] === email) {
-      return true;
+      return user;
+    }
+  }
+  return false;
+}
+
+function isPwCorrect (email, password) {
+  for (let user in users) {
+    if (users[user]["email"] === email && users[user]["password"] === password) {
+      return user;
     }
   }
   return false;
