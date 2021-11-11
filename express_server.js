@@ -9,8 +9,6 @@ const users = { };
 app.set("view engine", "ejs");
 
 const urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
 };
 
 
@@ -20,7 +18,7 @@ app.use(cookieParser())
 app.get("/urls", (req, res) => {
   const templateVars = {
     user: users[req.cookies["user_id"]],    
-    urls: urlDatabase
+    urls: getUserUrl(req.cookies["user_id"])
   };
   
   res.render("urls_index", templateVars);
@@ -28,10 +26,11 @@ app.get("/urls", (req, res) => {
 
 
 app.get("/", (req, res) => {
-  const templateVars = { 
-    user: users[req.cookies["user_id"]],
-    urls: urlDatabase 
+  const templateVars = {
+    user: users[req.cookies["user_id"]],    
+    urls: getUserUrl(req.cookies["user_id"])
   };
+  
   res.render("urls_index", templateVars);
 });
 
@@ -44,11 +43,17 @@ app.get("/urls.json", (req, res) => {
 });
 
 app.get("/urls/new", (req, res) => {
-  res.render("urls_new");
+  if (req.cookies["user_id"] === undefined) {
+    res.redirect("/login");
+  }
+  res.render("urls_new", {user: users[req.cookies["user_id"]]});
 });
 
 app.get("/urls/:shortURL", (req, res) => {
-  const templateVars = { shortURL: req.params.shortURL, longURL: req.params.longURL };
+  if (urlDatabase[req.params.shortURL] === undefined) {
+    return res.status(404).send('Page not Found');
+  }
+  const templateVars = { shortURL: req.params.shortURL, longURL: req.params.longURL, user: users[req.cookies["user_id"]] };
   res.render("urls_show", templateVars);
 });
 
@@ -56,12 +61,18 @@ app.get("/urls/:shortURL", (req, res) => {
 app.post("/urls", (req, res) => {
   // Log the POST request body to the console
   let shortURL = generateRandomString();
-  urlDatabase[shortURL] = "http://" + req.body.longURL; 
-  res.render( "urls_show", {shortURL: shortURL, longURL: req.body.longURL});         // Respond with 'Ok' (we will replace this)
+  urlDatabase[shortURL] = {
+    longURL: "http://" + req.body.longURL, 
+    userID: req.cookies["user_id"]
+  }
+  res.render( "urls_show", {shortURL: shortURL, longURL: req.body.longURL, user: users[req.cookies["user_id"]] });         // Respond with 'Ok' (we will replace this)
 });
 
 app.get("/u/:shortURL", (req, res) => {
-  const longURL = urlDatabase[req.params.shortURL];
+  if (urlDatabase[req.params.shortURL] === undefined) {
+    return res.status(404).send('Page not Found');
+  }
+  const longURL = urlDatabase[req.params.shortURL].longURL;
   console.log(longURL);
   res.redirect(longURL);
 });
@@ -90,7 +101,7 @@ app.post("/login", (req, res) => {
 });
 
 app.get("/login", (req, res) => {
-  res.render("login", {user: undefined});
+  res.render("login", {user: users[req.cookies["user_id"]]});
 })
 
 app.post("/logout", (req, res) => {
@@ -117,7 +128,7 @@ app.post("/register", (req, res) => {
 });
 
 app.get("/register", (req, res) => {
-  res.render("registration", {user: undefined})
+  res.render("registration", {user: users[req.cookies["user_id"]]})
 });
 
 function generateRandomString() {
@@ -138,11 +149,12 @@ function isEmailExsist (email) {
   return false;
 }
 
-function isPwCorrect (email, password) {
-  for (let user in users) {
-    if (users[user]["email"] === email && users[user]["password"] === password) {
-      return user;
+function getUserUrl (userid) {
+  const result = { };
+  for (let ele in urlDatabase) {
+    if (userid === urlDatabase[ele]["userID"]) {
+      result[ele] = urlDatabase[ele].longURL;
     }
   }
-  return false;
+  return result;
 }
