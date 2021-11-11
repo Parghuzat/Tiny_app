@@ -10,7 +10,7 @@
         <a class="nav-item nav-link" href="/urls/new">Create New URL</a>
       </div>
       <div class="nav navbar-nav">
-        <% if (user && user.email ){ %>
+        <% if (user != undefined && user.email ){ %>
           <form class="form-inline" action="/logout"  method="POST">
             <div class="form-group mb-2">
                 <lable class="nav-item" style="width: 300px; margin: 1em">Logged In As: <%= user.email %></lable>

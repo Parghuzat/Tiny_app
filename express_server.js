@@ -78,19 +78,19 @@ app.post("/login", (req, res) => {
   }
   const userId = isEmailExsist(req.body.email);
   if(userId == false) {
-    return res.status(400).send('Email doesn\'t exsist!');
+    return res.status(403).send('Email doesn\'t exsist!');
   }
   if (users[userId]["password"] === req.body.password) {
     res.cookie('user_id', userId);
     res.redirect('/urls');
   }
   else {
-    return res.status(400).send('Invalied email or password!');
+    return res.status(403).send('Invalied email or password!');
   }  
 });
 
 app.get("/login", (req, res) => {
-  res.render("login");
+  res.render("login", {user: undefined});
 })
 
 app.post("/logout", (req, res) => {
@@ -117,7 +117,7 @@ app.post("/register", (req, res) => {
 });
 
 app.get("/register", (req, res) => {
-  res.render("registration")
+  res.render("registration", {user: undefined})
 });
 
 function generateRandomString() {

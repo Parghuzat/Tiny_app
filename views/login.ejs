@@ -1,18 +1,21 @@
 <!DOCTYPE html>
-<htmt lang="en">
-  <h1>User login
-    <meta charset="utf-8">
-    
-    <!-- Bootstrap CSS -->
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css" integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" crossorigin="anonymous">
-    <title>User login</title>
-  </h1>
+<html lang="en">
+  <body>
+    <%- include('partials/_header') %>
+    <h1>User login
+      <meta charset="utf-8">
+      
+      <!-- Bootstrap CSS -->
+      <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css" integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" crossorigin="anonymous">
+      <title>User login</title>
+    </h1>
 
-  <form action="/login" method="post">
-    <label for="email">Email:</label>
-    <input type="email" name="email"><br><br>
-    <label for="password">Password:</label>
-    <input type="password" name="password"><br><br>
-    <button class="btn-primary">Login</button>
-  </form>
-</htmt>
+    <form action="/login" method="post">
+      <label for="email">Email:</label>
+      <input type="email" name="email"><br><br>
+      <label for="password">Password:</label>
+      <input type="password" name="password"><br><br>
+      <button class="btn-primary">Login</button>
+    </form>
+  </body>
+</html>
