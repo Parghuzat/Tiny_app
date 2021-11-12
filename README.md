@@ -3,7 +3,7 @@
 The TinyApp is a full stack web application built with Node and Express which allows user to Register, Login, Logout and Shorten long URLs.
 
 ## Final Product
-![](image/ScreenShot2021-11-11at7.00.32PM.png)
+![](https://github.com/Parghuzat/Tiny_app/blob/main/image/Screen%20Shot%202021-11-11%20at%207.00.32%20PM.png)
 
 
 ## Dependencies
