@@ -27,7 +27,6 @@ app.get("/urls", (req, res) => {
     user: users[req.session["user_id"]],    
     urls: getUserUrl(req.session.user_id)
   };
-  console.log(req.session.url);
   res.render("urls_index", templateVars);
 });
 
@@ -63,7 +62,7 @@ app.get("/urls/:shortURL", (req, res) => {
   if (urlDatabase[req.params.shortURL] === undefined) {
     return res.status(404).send('Page not Found');
   }
-  const templateVars = { shortURL: req.params.shortURL, longURL: req.params.longURL, user: users[req.cookies["user_id"]] };
+  const templateVars = { shortURL: req.params.shortURL, longURL: req.params.longURL, user: users[req.session["user_id"]] };
   res.render("urls_show", templateVars);
 });
 
@@ -75,7 +74,7 @@ app.post("/urls", (req, res) => {
     longURL: "http://" + req.body.longURL, 
     userID: req.session["user_id"]
   }
-  res.render( "urls_show", {shortURL: shortURL, longURL: req.body.longURL, user: users[req.cookies["user_id"]] });         // Respond with 'Ok' (we will replace this)
+  res.render( "urls_show", {shortURL: shortURL, longURL: req.body.longURL, user: users[req.session["user_id"]] });         // Respond with 'Ok' (we will replace this)
 });
 
 app.get("/u/:shortURL", (req, res) => {
@@ -107,7 +106,7 @@ app.post("/login", (req, res) => {
     return res.status(403).send('Email doesn\'t exsist!');
   }
   if (bcrypt.compareSync(req.body.password, users[userId]["password"]) === true) {
-    res.cookie('user_id', userId);
+    req.session.user_id = userId;
     res.redirect('/urls');
   }
   else {
