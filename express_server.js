@@ -66,16 +66,16 @@ app.get("/urls/new", (req, res) => {
 
 app.get("/urls/:shortURL", (req, res) => {
   if (req.session["user_id"] === undefined) {
-    res.redirect("/login");
+    return res.status(400).send("Plese log in first!");
   } 
   //when other than the short url's owner try to access the shorturl
   if(req.session["user_id"] != urlDatabase[req.params.shortURL].userID){
-    return res.status(400).send('Sorry! You don\'t have access to edit this url!');
+    return res.status(400).send('Sorry! You don\'t have access to this url!');
   }
   if (urlDatabase[req.params.shortURL] === undefined) {
-    return res.status(404).send('Page not Found');
+    return res.status(400).send('The Url does not exist!');
   }
-  const templateVars = { shortURL: req.params.shortURL, longURL: req.params.longURL, user: users[req.session["user_id"]] };
+  const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL].longURL, user: users[req.session["user_id"]] };
   res.render("urls_show", templateVars);
 });
 
