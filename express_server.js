@@ -4,6 +4,7 @@ const app = express();
 const PORT = 8080; // default port 8080
 const bodyParser = require("body-parser");
 var cookieSession = require('cookie-session');
+const { redirect } = require('express/lib/response');
 
 const users = { };
 
@@ -23,6 +24,9 @@ app.use(cookieSession({
 }))
 
 app.get("/urls", (req, res) => {
+  if(req.session["user_id"] === undefined){
+    res.status(400).send('Plese login first!');
+  }
   const templateVars = {
     user: users[req.session["user_id"]],    
     urls: getUserUrl(req.session.user_id)
@@ -36,8 +40,13 @@ app.get("/", (req, res) => {
     user: users[req.session["user_id"]],    
     urls: getUserUrl(req.session["user_id"])
   };
-  
-  res.render("urls_index", templateVars);
+  //user is logged in => to urls
+  //user is not logged in => to login
+  if(templateVars.user){
+    res.render("urls_index", templateVars);
+  }else{
+    res.render("login", {user: users[req.session["user_id"]]});
+  }
 });
 
 app.listen(PORT, () => {
@@ -58,6 +67,10 @@ app.get("/urls/new", (req, res) => {
 app.get("/urls/:shortURL", (req, res) => {
   if (req.session["user_id"] === undefined) {
     res.redirect("/login");
+  } 
+  //when other than the short url's owner try to access the shorturl
+  if(req.session["user_id"] != urlDatabase[req.params.shortURL].userID){
+    return res.status(400).send('Sorry! You don\'t have access to edit this url!');
   }
   if (urlDatabase[req.params.shortURL] === undefined) {
     return res.status(404).send('Page not Found');
@@ -68,30 +81,47 @@ app.get("/urls/:shortURL", (req, res) => {
 
 
 app.post("/urls", (req, res) => {
+  //fixing security risk => user cannot post without login
+  if (req.session["user_id"] === undefined) {
+    res.status(400).send("Sorry, You don't have access!");
+  } 
   // Log the POST request body to the console
   let shortURL = generateRandomString();
   urlDatabase[shortURL] = {
     longURL: "http://" + req.body.longURL, 
     userID: req.session["user_id"]
   }
-  res.render( "urls_show", {shortURL: shortURL, longURL: req.body.longURL, user: users[req.session["user_id"]] });         // Respond with 'Ok' (we will replace this)
+  const url = "/urls/" + shortURL;
+  res.redirect(url);
 });
 
 app.get("/u/:shortURL", (req, res) => {
   if (urlDatabase[req.params.shortURL] === undefined) {
     return res.status(404).send('Page not Found');
   }
+    //fixing security risk => user cannot access other url that they do not own
+  if (req.session["user_id"] === undefined) {
+    res.status(400).send("Sorry, You don't have access!");
+  } 
   const longURL = urlDatabase[req.params.shortURL].longURL;
   res.redirect(longURL);
 });
 
 app.post("/urls/:id", (req, res) => {
-  urlDatabase[req.params.id].longURL = req.body.longURL;
+  urlDatabase[req.params.id].longURL = "http://" + req.body.longURL;
   res.redirect("/urls");
 })
 
 // POST to remove URL
 app.post("/urls/:shortURL/delete", (req, res) => {
+  //fixing security risk => user cannot delete without login
+  if (req.session["user_id"] === undefined) {
+    return res.status(400).send('Sorry! You don\'t have access to delete this url!');
+  } 
+  //when other than the short url's owner try to access the shorturl
+  if(req.session["user_id"] != urlDatabase[req.params.shortURL].userID){
+    return res.status(400).send('Sorry! You don\'t have access to delete this url!');
+  }
   delete urlDatabase[req.params.shortURL];
   res.redirect("/urls");
 });
@@ -121,7 +151,7 @@ app.get("/login", (req, res) => {
 app.post("/logout", (req, res) => {
   req.session.user_id = null;
   req.session = null;
-  res.redirect('/urls');
+  res.redirect('/');
 });
 
 //store new user to the database
@@ -129,7 +159,7 @@ app.post("/register", (req, res) => {
   if (req.body.email === '' || req.body.password === '') {
     return res.status(400).send('Invalied email or password!');
   }
-  if(isEmailExsist(req.body.email) == true) {
+  if(isEmailExsist(req.body.email) != false) {
     return res.status(400).send('Email already exsist!');
   }
   const randomId = generateRandomString();
