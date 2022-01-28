@@ -1,3 +1,6 @@
+const helper = require('./helper');
+const {generateRandomString, isEmailExsist, getUserUrl} = helper;
+
 const bcrypt = require('bcryptjs');
 const express = require("express");
 const app = express();
@@ -29,7 +32,7 @@ app.get("/urls", (req, res) => {
   }
   const templateVars = {
     user: users[req.session["user_id"]],    
-    urls: getUserUrl(req.session.user_id)
+    urls: getUserUrl(req.session.user_id, urlDatabase)
   };
   res.render("urls_index", templateVars);
 });
@@ -38,7 +41,7 @@ app.get("/urls", (req, res) => {
 app.get("/", (req, res) => {
   const templateVars = {
     user: users[req.session["user_id"]],    
-    urls: getUserUrl(req.session["user_id"])
+    urls: getUserUrl(req.session["user_id"], urlDatabase)
   };
   //user is logged in => to urls
   //user is not logged in => to login
@@ -87,8 +90,12 @@ app.post("/urls", (req, res) => {
   } 
   // Log the POST request body to the console
   let shortURL = generateRandomString();
+  let longURL = req.body.longURL;
+  if(longURL.substring(0,4) !== "http"){
+    longURL = "http://" + longURL;
+  }
   urlDatabase[shortURL] = {
-    longURL: "http://" + req.body.longURL, 
+    longURL: req.body.longURL, 
     userID: req.session["user_id"]
   }
   const url = "/urls/" + shortURL;
@@ -100,15 +107,16 @@ app.get("/u/:shortURL", (req, res) => {
     return res.status(404).send('Page not Found');
   }
     //fixing security risk => user cannot access other url that they do not own
-  if (req.session["user_id"] === undefined) {
-    res.status(400).send("Sorry, You don't have access!");
-  } 
   const longURL = urlDatabase[req.params.shortURL].longURL;
   res.redirect(longURL);
 });
 
 app.post("/urls/:id", (req, res) => {
-  urlDatabase[req.params.id].longURL = "http://" + req.body.longURL;
+  let longURL = req.body.longURL;
+  if(longURL.substring(0,4) !== "http"){
+    longURL = "http://" + longURL;
+  }
+  urlDatabase[req.params.id].longURL = longURL;
   res.redirect("/urls");
 })
 
@@ -131,7 +139,7 @@ app.post("/login", (req, res) => {
   if (req.body.email === '' || req.body.password === '') {
     return res.status(400).send('Invalied email or password!');
   }
-  const userId = isEmailExsist(req.body.email);
+  const userId = isEmailExsist(req.body.email, users);
   if(userId == false) {
     return res.status(403).send('Email doesn\'t exsist!');
   }
@@ -159,7 +167,7 @@ app.post("/register", (req, res) => {
   if (req.body.email === '' || req.body.password === '') {
     return res.status(400).send('Invalied email or password!');
   }
-  if(isEmailExsist(req.body.email) != false) {
+  if(isEmailExsist(req.body.email, users) != false) {
     return res.status(400).send('Email already exsist!');
   }
   const randomId = generateRandomString();
@@ -177,30 +185,3 @@ app.get("/register", (req, res) => {
   res.render("registration", {user: users[req.session["user_id"]]})
 });
 
-function generateRandomString() {
-  const chart = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
-  let result = '';
-  for (i = 0; i < 6; i++) {
-    result = result + chart[Math.floor(Math.random() * (chart.length - 1))];
-  }
-  return result;
-}
-
-function isEmailExsist (email) {
-  for (let user in users) {
-    if (users[user]["email"] === email) {
-      return user;
-    }
-  }
-  return false;
-}
-
-function getUserUrl (userid) {
-  const result = { };
-  for (let ele in urlDatabase) {
-    if (userid === urlDatabase[ele]["userID"]) {
-      result[ele] = urlDatabase[ele].longURL;
-    }
-  }
-  return result;
-}
